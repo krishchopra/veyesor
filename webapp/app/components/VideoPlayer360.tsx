@@ -9,40 +9,73 @@ const ReactPlayerComponent = dynamic(() => import("react-player"), {
 });
 
 interface VideoPlayer360Props {
-	wsUrl: string;
+	signalingServer: string;
 }
 
-export default function VideoPlayer360({ wsUrl }: VideoPlayer360Props) {
+export default function VideoPlayer360({
+	signalingServer,
+}: VideoPlayer360Props) {
 	const playerRef = useRef<ReactPlayer>(null);
-	const [streamUrl, setStreamUrl] = useState<string>("");
+	const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+	const [streamUrl, setStreamUrl] = useState<MediaStream | null>(null);
 
 	useEffect(() => {
-		// Create WebSocket connection
-		const ws = new WebSocket(wsUrl);
-
-		ws.onopen = () => {
-			console.log("Connected to video stream");
+		const configuration: RTCConfiguration = {
+			iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 		};
 
-		ws.onmessage = (event) => {
-			// Assuming the server sends the video stream URL
-			const data = JSON.parse(event.data);
-			if (data.streamUrl) {
-				setStreamUrl(data.streamUrl);
+		const peerConnection = new RTCPeerConnection(configuration);
+		peerConnectionRef.current = peerConnection;
+
+		peerConnection.ontrack = (event) => {
+			const [stream] = event.streams;
+			setStreamUrl(stream);
+		};
+
+		const ws = new WebSocket(signalingServer);
+
+		ws.onmessage = async (event) => {
+			const message = JSON.parse(event.data);
+
+			switch (message.type) {
+				case "offer":
+					await peerConnection.setRemoteDescription(
+						new RTCSessionDescription(message)
+					);
+					const answer = await peerConnection.createAnswer();
+					await peerConnection.setLocalDescription(answer);
+					ws.send(JSON.stringify(answer));
+					break;
+
+				case "ice-candidate":
+					if (message.candidate) {
+						await peerConnection.addIceCandidate(
+							new RTCIceCandidate(message)
+						);
+					}
+					break;
 			}
 		};
 
-		ws.onerror = (error) => {
-			console.error("WebSocket error:", error);
+		peerConnection.onicecandidate = (event) => {
+			if (event.candidate) {
+				ws.send(
+					JSON.stringify({
+						type: "ice-candidate",
+						candidate: event.candidate,
+					})
+				);
+			}
 		};
 
 		return () => {
 			ws.close();
+			peerConnection.close();
 		};
-	}, [wsUrl]);
+	}, [signalingServer]);
 
 	if (!streamUrl) {
-		return <div>Loading stream...</div>;
+		return <div>Connecting to video stream...</div>;
 	}
 
 	return (
