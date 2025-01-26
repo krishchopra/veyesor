@@ -12,7 +12,7 @@ camera_urls = [
     "http://10.217.5.80:4747/video",  # Benson
     "http://10.217.22.138:4747/video", # Krish
     "http://10.217.29.154:4747/video",  # Fahmi
-    "http://10.217.13.254:4747/video", # Alex
+    # "http://10.217.13.254:4747/video", # Alex
 ]
 
 print("[INFO] Starting camera streams...")
@@ -21,7 +21,7 @@ captures = [cv2.VideoCapture(url) for url in camera_urls]
 # Verify that each capture stream is opened successfully
 for i, cap in enumerate(captures):
     if not cap.isOpened():
-        print(f"[ERROR] Could not open camera stream at index {i}")
+        # print(f"[ERROR] Could not open camera stream at index {i}")
         exit(1)
 
 time.sleep(2.0)
@@ -35,7 +35,7 @@ initial_frames = []
 for i, cap in enumerate(captures):
     ret, frame = cap.read()
     # Debugging prints
-    print(f"[DEBUG] Stream {i} read success: {ret}")
+    # print(f"[DEBUG] Stream {i} read success: {ret}")
     if not ret:
         print(f"[ERROR] Could not read frame from camera at index {i}")
         break
@@ -55,7 +55,7 @@ while True:
     for i, cap in enumerate(captures):
         ret, frame = cap.read()
         # Debugging prints
-        print(f"[DEBUG] Stream {i} read success: {ret}")
+        #print(f"[DEBUG] Stream {i} read success: {ret}")
         if not ret:
             print(f"[ERROR] Could not read frame from camera at index {i}")
             break
