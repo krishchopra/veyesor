@@ -210,7 +210,7 @@ async def main():
             port,
             ping_interval=None,
             ping_timeout=None,
-            origins=ALLOWED_ORIGINS[ENVIRONMENT],
+            origins=None,  # Allow all origins for development
         ) as server:
             logger.info(f"WebSocket server is running on ws://{host}:{port}")
             logger.info(f"Environment: {ENVIRONMENT}")

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-const WEBSOCKET_URL = 'ws://127.0.0.1:8765';
+const WEBSOCKET_URL = 'ws://localhost:8765';
 
 const VideoStream: React.FC = () => {
     const imageRef = useRef<HTMLImageElement>(null);
